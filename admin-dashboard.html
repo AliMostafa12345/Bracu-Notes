@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <link rel="stylesheet" href="admin-dashboard-style.css">
+
+</head>
+<body>
+  <h1>Admin Dashboard - Pending Notes</h1>
+  <div id="notesContainer"></div>
+  <button onclick="location.href='admin-panel.html'">Go to Admin Panel</button>
+  <button onclick="logout()">Logout</button>
+
+  <script src="firebase-config.js"></script>
+  <script>
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const notesContainer = document.getElementById('notesContainer');
+    const adminUIDs = ['qVVVy5UkrCUiyQlzyhbdAU01x6b2'];
+
+    function logout() {
+      auth.signOut().then(() => window.location.href = 'index.html');
+    }
+
+    function renderNote(doc) {
+      const data = doc.data();
+      const div = document.createElement('div');
+      div.className = 'note-card';
+      div.innerHTML = `
+        <h3>${data.title}</h3>
+        <p><strong>Course:</strong> ${data.course}</p>
+        <p>${data.text}</p>
+        <button onclick="approve('${doc.id}')">Approve</button>
+        <button onclick="disapprove('${doc.id}')">Disapprove</button>
+      `;
+      notesContainer.appendChild(div);
+    }
+
+    function loadNotes() {
+      notesContainer.innerHTML = 'Loading...';
+      db.collection('pending_notes')
+        .orderBy('timestamp', 'desc')
+        .get()
+        .then(snapshot => {
+          notesContainer.innerHTML = '';
+          if (snapshot.empty) {
+            notesContainer.textContent = 'No pending notes.';
+            return;
+          }
+          snapshot.forEach(doc => renderNote(doc));
+        })
+        .catch(err => {
+          notesContainer.textContent = 'Error loading notes.';
+          console.error(err);
+        });
+    }
+
+    function approve(id) {
+      const noteRef = db.collection('pending_notes').doc(id);
+      noteRef.get().then(doc => {
+        if (!doc.exists) return;
+        const data = doc.data();
+        // Move note to approved 'resources'
+        db.collection('resources').add({
+          department: data.department,
+          course: data.course,
+          text: data.text,
+          title: data.title,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          // Delete from pending_notes
+          noteRef.delete().then(loadNotes);
+        });
+      });
+    }
+
+    function disapprove(id) {
+      db.collection('pending_notes').doc(id).delete().then(loadNotes);
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user && adminUIDs.includes(user.uid)) {
+        loadNotes();
+      } else {
+        window.location.href = 'admin-login.html';
+      }
+    });
+  </script>
+</body>
+</html>

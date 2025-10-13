@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Course Resources</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ✅ Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+
+  <link rel="stylesheet" href="resources-style.css">
+</head>
+<body>
+  <h1 id="pageTitle">Resources</h1>
+  <div id="resourcesList"></div>
+
+  <!-- ✅ Firebase Config -->
+  <script src="firebase-config.js"></script>
+  <script>
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const analytics = firebase.analytics();
+    const adminUIDs = ['qVVVy5UkrCUiyQlzyhbdAU01x6b2'];
+
+    let departmentName = '';
+    let courseName = '';
+    let docIDs = [];
+
+    function getQueryParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        dept: params.get('dept')?.trim() || '',
+        course: params.get('course')?.trim() || ''
+      };
+    }
+
+    function linkify(text) {
+      const urlPattern = /(https?:\/\/[^\s]+)/g;
+      return text.replace(urlPattern, url => `<a href="${url}" target="_blank" style="color:blue;">${url}</a>`);
+    }
+
+    function renderEditable(resources, isAdmin) {
+      const container = document.getElementById('resourcesList');
+      container.innerHTML = '';
+
+      if (!resources.length) return;
+
+      if (isAdmin) {
+        const textarea = document.createElement('textarea');
+        textarea.value = resources.join('\n\n---\n\n');
+        textarea.rows = 20;
+        textarea.style.width = '100%';
+        textarea.style.background = '#161b22';
+        textarea.style.color = '#c9d1d9';
+        textarea.style.padding = '15px';
+        textarea.style.border = '1px solid #30363d';
+        textarea.style.borderRadius = '8px';
+        textarea.style.fontSize = '1rem';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'note-card';
+        wrapper.appendChild(textarea);
+
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Save Changes';
+        saveBtn.style.marginTop = '15px';
+        saveBtn.onclick = () => {
+          const newText = textarea.value.split('\n\n---\n\n');
+          const updates = newText.map((text, index) => {
+            const id = docIDs[index];
+            if (!id) return null;
+            return db.collection('resources').doc(id).update({ text: text.trim() });
+          }).filter(p => p !== null);
+          Promise.all(updates).then(() => {
+            alert('Notes updated successfully.');
+            renderEditable(newText, true);
+          }).catch(err => {
+            alert('Failed to update: ' + err.message);
+          });
+        };
+
+        wrapper.appendChild(saveBtn);
+        container.appendChild(wrapper);
+
+      } else {
+        resources.forEach(resText => {
+          const div = document.createElement('div');
+          div.className = 'note-card';
+          div.style.marginBottom = '15px';
+          div.style.whiteSpace = 'pre-wrap';
+          div.innerHTML = linkify(resText);
+          container.appendChild(div);
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const { dept, course } = getQueryParams();
+
+      if (!dept || !course) {
+        document.getElementById('pageTitle').textContent = 'Invalid Department or Course';
+        return;
+      }
+
+      departmentName = dept;
+      courseName = course;
+
+      document.getElementById('pageTitle').textContent = `${dept} - ${course} Resources`;
+
+      auth.onAuthStateChanged(user => {
+        const isAdmin = user && adminUIDs.includes(user.uid);
+
+        db.collection('departments').get()
+          .then(snapshot => {
+            let matchedDeptDoc = null;
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              if (data.name?.toLowerCase() === dept.toLowerCase()) {
+                matchedDeptDoc = doc;
+              }
+            });
+
+            if (!matchedDeptDoc) {
+              document.getElementById('resourcesList').textContent = 'Department not found.';
+              return;
+            }
+
+            const courses = matchedDeptDoc.data().courses || [];
+            const matchedCourse = courses.find(c => c.toLowerCase() === course.toLowerCase());
+
+            if (!matchedCourse) {
+              document.getElementById('resourcesList').textContent = 'Course not found.';
+              return;
+            }
+
+            db.collection('resources')
+              .where('department', '==', matchedDeptDoc.data().name)
+              .where('course', '==', matchedCourse)
+              .get()
+              .then(resSnapshot => {
+                const resources = [];
+                docIDs = [];
+
+                const seen = new Set();
+
+                resSnapshot.forEach(doc => {
+                  const data = doc.data();
+                  const text = data.text?.trim();
+
+                  if (!text || text === 'No resources uploaded yet.' || seen.has(text)) return;
+
+                  seen.add(text);
+                  resources.push(text);
+                  docIDs.push(doc.id);
+                });
+
+                renderEditable(resources, isAdmin);
+              })
+              .catch(() => {
+                document.getElementById('resourcesList').textContent = 'Error loading resources.';
+              });
+          })
+          .catch(() => {
+            document.getElementById('resourcesList').textContent = 'Error loading department.';
+          });
+      });
+    });
+  </script>
+
+  <!-- ✅ Ad Section -->
+  <div id="adContainer" style="width: 100%; text-align: center; margin-top: 40px;"></div>
+
+  <script>
+    function isMobileDevice() {
+      return /Mobi|Android|iPhone/i.test(navigator.userAgent);
+    }
+
+    const adContainer = document.getElementById("adContainer");
+
+    function loadAdScript(key, width, height) {
+      const script1 = document.createElement('script');
+      script1.type = 'text/javascript';
+      script1.innerHTML = `
+        atOptions = {
+          'key': '${key}',
+          'format': 'iframe',
+          'height': ${height},
+          'width': ${width},
+          'params': {}
+        };
+      `;
+
+      const script2 = document.createElement('script');
+      script2.type = 'text/javascript';
+      script2.src = `//www.highperformanceformat.com/${key}/invoke.js`;
+
+      adContainer.appendChild(script1);
+      adContainer.appendChild(script2);
+    }
+
+    if (isMobileDevice()) {
+      loadAdScript('4352272339dd897b2757103281eb9250', 320, 50);
+    } else {
+      loadAdScript('1eef7badb62dff6eeec210515069a617', 728, 90);
+    }
+  </script>
+</body>
+</html>

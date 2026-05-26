@@ -1,0 +1,242 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #0e1621;
+  color: #c8d0e7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 20px;
+  min-height: 100vh;
+}
+
+/* Main heading */
+h1 {
+  font-size: 3rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  user-select: none;
+}
+
+/* Auth status */
+#authStatus {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Container for cards and buttons */
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 25px;
+  width: 100%;
+  max-width: 1100px;
+  margin-bottom: 40px;
+}
+
+/* Department and course cards */
+.card {
+  background-color: #141d2b;
+  border-radius: 16px;
+  padding: 25px 10px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.3rem;
+  color: #c8d0e7;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card:hover {
+  background-color: #324a9f;
+  box-shadow: 0 12px 30px rgba(74, 101, 195, 0.8);
+}
+
+/* Buttons inside course cards */
+.card.course-card button {
+  margin-top: 10px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #1f2937;
+  color: #c8d0e7;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(74, 101, 195, 0.7);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card.course-card button:hover {
+  background-color: #324a9f;
+  box-shadow: 0 6px 14px rgba(74, 101, 195, 1);
+}
+
+/* Back button */
+#backToDeptsBtn {
+  background-color: #1f2937;
+  color: #c8d0e7;
+  border: none;
+  border-radius: 10px;
+  padding: 15px 30px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(74, 101, 195, 0.7);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 40px;
+  user-select: none;
+}
+
+#backToDeptsBtn:hover {
+  background-color: #324a9f;
+  box-shadow: 0 6px 14px rgba(74, 101, 195, 1);
+}
+
+/* Main action buttons below */
+button[onclick] {
+  background-color: transparent;
+  color: #f5a623;
+  border: 2px solid #f5a623;
+  border-radius: 10px;
+  padding: 18px 40px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 0 25px 0;
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+  display: block;
+  width: 280px;
+  text-align: center;
+  user-select: none;
+}
+
+button[onclick]:hover {
+  background-color: #f5a623;
+  color: #0e1621;
+  box-shadow: 0 6px 18px rgba(245, 166, 35, 0.8);
+}
+
+/* Admin Section */
+#adminSection {
+  margin-top: 40px;
+  width: 100%;
+  max-width: 600px;
+  background-color: #141d2b;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.7);
+}
+
+#adminSection h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: #f5a623;
+  text-align: center;
+  user-select: none;
+}
+
+/* Forms in admin section */
+#adminSection form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 30px;
+  justify-content: center;
+}
+
+#adminSection input[type="text"],
+#adminSection select {
+  flex: 1 1 220px;
+  padding: 12px 16px;
+  font-size: 1.1rem;
+  border-radius: 12px;
+  border: none;
+  background-color: #1f2937;
+  color: #c8d0e7;
+  box-shadow: inset 0 0 8px #323f5d;
+  font-weight: 600;
+  outline: none;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#adminSection input[type="text"]::placeholder {
+  color: #7a8aa6;
+}
+
+#adminSection input[type="text"]:focus,
+#adminSection select:focus {
+  background-color: #2a3751;
+  box-shadow: 0 0 12px #4a65c3;
+}
+
+/* Form buttons */
+#adminSection button[type="submit"],
+#adminSection button[onclick] {
+  background-color: #1f2937;
+  color: #c8d0e7;
+  border: none;
+  border-radius: 12px;
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(74, 101, 195, 0.7);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
+}
+
+#adminSection button[type="submit"]:hover,
+#adminSection button[onclick]:hover {
+  background-color: #324a9f;
+  box-shadow: 0 6px 14px rgba(74, 101, 195, 1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .cards-container {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 20px;
+  }
+
+  button[onclick], #backToDeptsBtn {
+    width: 100%;
+    padding: 16px 0;
+    font-size: 1.2rem;
+  }
+
+  #adminSection {
+    padding: 20px;
+  }
+
+  #adminSection input[type="text"],
+  #adminSection select {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 450px) {
+  h1 {
+    font-size: 2.2rem;
+  }
+
+  .card {
+    font-size: 1.1rem;
+    padding: 20px 8px;
+  }
+}

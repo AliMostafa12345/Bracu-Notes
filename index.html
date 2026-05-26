@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BRACU Notes - Departments</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <link rel="stylesheet" href="index-style.css">
+</head>
+<body>
+  <h1>Departments</h1>
+
+  <div id="authStatus"></div>
+
+  <div id="departmentsView" class="cards-container"></div>
+  <div id="coursesView" class="cards-container" style="display:none;"></div>
+  <button id="backToDeptsBtn" style="display:none;">← Back to Departments</button>
+
+  <hr>
+
+  <button onclick="location.href='upload.html'">Upload Course</button>
+
+  <!-- Admin tools -->
+  <div id="adminSection" style="display:none;">
+    <h2>Admin Tools</h2>
+
+    <form id="addDeptForm">
+      <input type="text" id="deptName" placeholder="New Department Name" required>
+      <button type="submit">Add Department</button>
+    </form>
+
+    <form id="addCourseForm">
+      <select id="deptSelect"></select>
+      <input type="text" id="courseName" placeholder="New Course Name" required>
+      <button type="submit">Add Course</button>
+    </form>
+
+    <button onclick="location.href='admin-dashboard.html'">Go to Admin Dashboard</button>
+    <button onclick="location.href='admin-panel.html'">Go to Admin Panel</button>
+  </div>
+
+  <script src="firebase-config.js"></script>
+  <script>
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const adminUIDs = ['qVVVy5UkrCUiyQlzyhbdAU01x6b2'];
+
+    const authStatus = document.getElementById('authStatus');
+    const adminSection = document.getElementById('adminSection');
+    const deptSelect = document.getElementById('deptSelect');
+
+    const departmentsView = document.getElementById('departmentsView');
+    const coursesView = document.getElementById('coursesView');
+    const backToDeptsBtn = document.getElementById('backToDeptsBtn');
+
+    let departments = [];
+    let isAdmin = false;
+    let currentUser = null;
+
+    function renderDepartments() {
+      departmentsView.innerHTML = '';
+      deptSelect.innerHTML = '';
+
+      departments.forEach(dept => {
+        const card = document.createElement('div');
+        card.className = 'card department-card';
+        card.textContent = dept.name;
+        card.onclick = () => showCourses(dept);
+
+        departmentsView.appendChild(card);
+
+        const option = document.createElement('option');
+        option.value = dept.name;
+        option.textContent = dept.name;
+        deptSelect.appendChild(option);
+      });
+    }
+
+    function showCourses(dept) {
+      departmentsView.style.display = 'none';
+      coursesView.style.display = 'grid';
+      backToDeptsBtn.style.display = 'inline-block';
+      coursesView.innerHTML = '';
+
+      const courseList = dept.courses || [];
+
+      courseList.forEach(course => {
+        const courseCard = document.createElement('div');
+        courseCard.className = 'card course-card';
+        courseCard.innerHTML = `<h3>${course}</h3>`;
+        courseCard.onclick = () => viewResources(dept.name, course);
+        coursesView.appendChild(courseCard);
+      });
+    }
+
+    function viewResources(dept, course) {
+      const url = `resources.html?dept=${encodeURIComponent(dept)}&course=${encodeURIComponent(course)}`;
+      window.open(url, '_blank');
+    }
+
+    function loadDepartments() {
+      db.collection('departments').get().then(snapshot => {
+        departments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        departments.sort((a, b) => a.name.localeCompare(b.name));
+        renderDepartments();
+      });
+    }
+
+    document.getElementById('backToDeptsBtn').onclick = () => {
+      departmentsView.style.display = 'grid';
+      coursesView.style.display = 'none';
+      backToDeptsBtn.style.display = 'none';
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const addDeptForm = document.getElementById('addDeptForm');
+      const addCourseForm = document.getElementById('addCourseForm');
+
+      addDeptForm.addEventListener('submit', e => {
+        e.preventDefault();
+        if (!isAdmin) return;
+
+        const name = document.getElementById('deptName').value.trim();
+        if (!name) return;
+
+        db.collection('departments').add({ name, courses: [] }).then(() => {
+          document.getElementById('deptName').value = '';
+          loadDepartments();
+        });
+      });
+
+      addCourseForm.addEventListener('submit', e => {
+        e.preventDefault();
+        if (!isAdmin) return;
+
+        const deptName = deptSelect.value;
+        const course = document.getElementById('courseName').value.trim();
+        if (!course || !deptName) return;
+
+        db.collection('departments').where('name', '==', deptName).get().then(snapshot => {
+          if (!snapshot.empty) {
+            const doc = snapshot.docs[0];
+            const data = doc.data();
+            const updatedCourses = data.courses || [];
+
+            if (!updatedCourses.includes(course)) {
+              updatedCourses.push(course);
+              db.collection('departments').doc(doc.id).update({ courses: updatedCourses }).then(() => {
+                db.collection('resources').add({
+                  department: deptName,
+                  course,
+                  title: "Placeholder Resource",
+                  text: "No resources uploaded yet.",
+                  timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                  document.getElementById('courseName').value = '';
+                  loadDepartments();
+                });
+              });
+            }
+          }
+        });
+      });
+    });
+
+    auth.onAuthStateChanged(user => {
+      currentUser = user;
+      isAdmin = user && adminUIDs.includes(user.uid);
+      authStatus.textContent = user
+        ? `Signed in as${isAdmin ? " Admin" : ""}: ${user.email}`
+        : 'Not signed in.';
+      adminSection.style.display = isAdmin ? 'block' : 'none';
+      loadDepartments();
+    });
+  </script>
+</body>
+</html>

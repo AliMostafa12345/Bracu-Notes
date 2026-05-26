@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="admin-panel.css"/>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Upload Notes</h1>
+      <nav>
+        <button onclick="location.href='admin-dashboard.html'">Dashboard</button>
+        <button onclick="logout()">Logout</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="block">
+        <h2>Departments</h2>
+        <ul id="departmentsList" class="list"></ul>
+        <form id="addDeptForm" class="form">
+          <input type="text" id="newDeptName" placeholder="New Department" required />
+          <button type="submit">Add Department</button>
+        </form>
+      </section>
+
+      <section class="block">
+        <h2>Courses</h2>
+        <select id="deptSelect" class="dropdown"></select>
+        <ul id="coursesList" class="list"></ul>
+        <form id="addCourseForm" class="form">
+          <input type="text" id="newCourseName" placeholder="New Course" required />
+          <button type="submit">Add Course</button>
+        </form>
+      </section>
+
+      <section class="block">
+        <h2>Add Resource</h2>
+        <form id="addResourceForm" class="form">
+          <select id="resourceDeptSelect" required></select>
+          <select id="resourceCourseSelect" required>
+            <option value="">Select Course</option>
+          </select>
+          <textarea id="resourceText" placeholder="Resource Content" required></textarea>
+          <button type="submit">Add Resource</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="firebase-config.js"></script>
+  <script>
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const adminUIDs = ['qVVVy5UkrCUiyQlzyhbdAU01x6b2'];
+
+    const departmentsList = document.getElementById('departmentsList');
+    const deptSelect = document.getElementById('deptSelect');
+    const coursesList = document.getElementById('coursesList');
+    const addDeptForm = document.getElementById('addDeptForm');
+    const addCourseForm = document.getElementById('addCourseForm');
+    const newDeptName = document.getElementById('newDeptName');
+    const newCourseName = document.getElementById('newCourseName');
+
+    const addResourceForm = document.getElementById('addResourceForm');
+    const resourceDeptSelect = document.getElementById('resourceDeptSelect');
+    const resourceCourseSelect = document.getElementById('resourceCourseSelect');
+    const resourceText = document.getElementById('resourceText');
+
+    let departments = [];
+    let selectedDeptId = null;
+    let lastSelectedCourseDeptId = null;
+    let lastSelectedResourceDeptName = null;
+
+    function logout() {
+      auth.signOut().then(() => window.location.href = 'index.html');
+    }
+
+    function loadDepartments() {
+      db.collection('departments').get()
+        .then(snapshot => {
+          departments = [];
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            departments.push({ id: doc.id, ...data });
+          });
+
+          departments.sort((a, b) => a.name.localeCompare(b.name));
+
+          departmentsList.innerHTML = '';
+          deptSelect.innerHTML = '<option value="">Select Department</option>';
+
+          departments.forEach(dept => {
+            const li = document.createElement('li');
+            li.textContent = dept.name + ' ';
+
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Delete';
+            delBtn.onclick = () => deleteDepartment(dept.id);
+            li.appendChild(delBtn);
+
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.onclick = () => editDepartment(dept.id, dept.name);
+            li.appendChild(editBtn);
+
+            departmentsList.appendChild(li);
+
+            const option = document.createElement('option');
+            option.value = dept.id;
+            option.textContent = dept.name;
+            deptSelect.appendChild(option);
+          });
+
+          populateResourceDeptSelect();
+        });
+    }
+
+    function deleteDepartment(id) {
+      if (!confirm('Delete this department?')) return;
+      db.collection('departments').doc(id).delete().then(() => {
+        loadDepartments();
+        coursesList.innerHTML = '';
+      });
+    }
+
+    function editDepartment(id, oldName) {
+      const newName = prompt('Enter new name for department:', oldName);
+      if (newName && newName.trim() !== '') {
+        db.collection('departments').doc(id).update({ name: newName.trim() }).then(loadDepartments);
+      }
+    }
+
+    function loadCourses(deptId) {
+      coursesList.innerHTML = '';
+      if (!deptId) return;
+      selectedDeptId = deptId;
+      const dept = departments.find(d => d.id === deptId);
+      if (!dept || !dept.courses) return;
+
+      dept.courses.forEach(course => {
+        const li = document.createElement('li');
+        li.textContent = course + ' ';
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = () => deleteCourse(deptId, course);
+        li.appendChild(delBtn);
+
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = () => editCourse(deptId, course);
+        li.appendChild(editBtn);
+
+        coursesList.appendChild(li);
+      });
+    }
+
+    function deleteCourse(deptId, courseName) {
+      if (!confirm('Delete this course?')) return;
+      const dept = departments.find(d => d.id === deptId);
+      if (!dept) return;
+      const updatedCourses = dept.courses.filter(c => c !== courseName);
+      db.collection('departments').doc(deptId).update({ courses: updatedCourses }).then(() => {
+        loadDepartments();
+        loadCourses(deptId);
+      });
+    }
+
+    function editCourse(deptId, oldName) {
+      const newName = prompt('Enter new name for course:', oldName);
+      if (!newName || !newName.trim()) return;
+      const dept = departments.find(d => d.id === deptId);
+      if (!dept) return;
+      const updatedCourses = dept.courses.map(c => (c === oldName ? newName.trim() : c));
+      db.collection('departments').doc(deptId).update({ courses: updatedCourses }).then(() => {
+        loadDepartments();
+        loadCourses(deptId);
+      });
+    }
+
+    addDeptForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = newDeptName.value.trim();
+      if (!name) return;
+      db.collection('departments').add({ name, courses: [] }).then(() => {
+        newDeptName.value = '';
+        loadDepartments();
+      });
+    });
+
+    deptSelect.addEventListener('change', () => {
+      const selectedId = deptSelect.value;
+      if (selectedId) {
+        lastSelectedCourseDeptId = selectedId;
+        loadCourses(selectedId);
+      }
+    });
+
+    addCourseForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const course = newCourseName.value.trim();
+      if (!course || !lastSelectedCourseDeptId) return;
+      const dept = departments.find(d => d.id === lastSelectedCourseDeptId);
+      if (!dept) return;
+      const updatedCourses = dept.courses || [];
+      if (!updatedCourses.includes(course)) {
+        updatedCourses.push(course);
+        db.collection('departments').doc(lastSelectedCourseDeptId).update({ courses: updatedCourses }).then(() => {
+          db.collection('resources').add({
+            department: dept.name,
+            course: course,
+            text: "No resources uploaded yet.",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(() => {
+            newCourseName.value = '';
+            loadDepartments();
+            loadCourses(lastSelectedCourseDeptId);
+          });
+        });
+      }
+    });
+
+    function populateResourceDeptSelect() {
+      resourceDeptSelect.innerHTML = '<option value="">Select Department</option>';
+      departments.forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept.name;
+        option.textContent = dept.name;
+        resourceDeptSelect.appendChild(option);
+      });
+      resourceCourseSelect.innerHTML = '<option value="">Select Course</option>';
+    }
+
+    resourceDeptSelect.addEventListener('change', () => {
+      const selectedDeptName = resourceDeptSelect.value;
+      if (!selectedDeptName) return;
+
+      lastSelectedResourceDeptName = selectedDeptName;
+      resourceCourseSelect.innerHTML = '<option value="">Select Course</option>';
+
+      const deptObj = departments.find(d => d.name === selectedDeptName);
+      if (deptObj && deptObj.courses) {
+        deptObj.courses.forEach(course => {
+          const option = document.createElement('option');
+          option.value = course;
+          option.textContent = course;
+          resourceCourseSelect.appendChild(option);
+        });
+      }
+    });
+
+    addResourceForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const dept = lastSelectedResourceDeptName;
+      const course = resourceCourseSelect.value;
+      const text = resourceText.value.trim();
+
+      if (!dept || !course || !text) return alert('Please fill all fields.');
+
+      const deptObj = departments.find(d => d.name === dept);
+      if (!deptObj || !deptObj.courses.includes(course)) {
+        return alert('Course does not exist in selected department.');
+      }
+
+      db.collection('resources').add({
+        department: dept,
+        course: course,
+        text: text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        alert('Resource added successfully!');
+        resourceCourseSelect.selectedIndex = 0;
+        resourceText.value = '';
+      }).catch(err => {
+        console.error('Error adding resource:', err);
+        alert('Failed to add resource.');
+      });
+    });
+
+    auth.onAuthStateChanged(user => {
+      if (user && adminUIDs.includes(user.uid)) {
+        loadDepartments();
+      } else {
+        window.location.href = 'admin-login.html';
+      }
+    });
+  </script>
+</body>
+</html>

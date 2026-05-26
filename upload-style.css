@@ -1,0 +1,76 @@
+/* upload-style.css */
+
+body {
+  background-color: #0d1117;
+  color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  margin-bottom: 25px;
+  color: #c9d1d9;
+  text-align: center;
+}
+
+form {
+  background-color: #161b22;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(240, 185, 11, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  max-width: 400px;
+}
+
+input[type="text"],
+textarea {
+  background-color: #0d1117;
+  border: 1px solid #30363d;
+  color: #ffffff;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+  transition: 0.3s;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #f0b90b;
+  outline: none;
+  box-shadow: 0 0 8px #f0b90b66;
+}
+
+button {
+  background-color: transparent;
+  color: #f0b90b;
+  border: 2px solid #f0b90b;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+button:hover {
+  background-color: #f0b90b;
+  color: #0d1117;
+  box-shadow: 0 0 12px #f0b90b99;
+}
+
+#uploadStatus {
+  margin-top: 20px;
+  font-size: 1rem;
+  color: #58a6ff;
+  text-align: center;
+}

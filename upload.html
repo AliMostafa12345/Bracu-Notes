@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload Course Material</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <link rel="stylesheet" href="upload-style.css">
+
+</head>
+<body>
+  <h1>Upload Course Material</h1>
+  <form id="uploadForm">
+    <input type="text" id="department" placeholder="Department Name" required><br>
+    <input type="text" id="course" placeholder="Course Name" required><br>
+    <input type="text" id="title" placeholder="Material Title" required><br>
+    <textarea id="text" placeholder="Course Material Text" rows="5" required></textarea><br>
+    <button type="submit">Upload</button>
+  </form>
+  <div id="uploadStatus"></div>
+
+  <script src="firebase-config.js"></script>
+  <script>
+    const db = firebase.firestore();
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadStatus = document.getElementById('uploadStatus');
+
+    uploadForm.addEventListener('submit', e => {
+      e.preventDefault();
+
+      const department = document.getElementById('department').value.trim();
+      const course = document.getElementById('course').value.trim();
+      const title = document.getElementById('title').value.trim();
+      const text = document.getElementById('text').value.trim();
+
+      if (!department || !course || !title || !text) {
+        uploadStatus.textContent = 'Please fill all fields.';
+        return;
+      }
+
+      db.collection('pending_notes').add({
+        department,
+        course,
+        title,
+        text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        uploadStatus.textContent = 'Upload successful! Awaiting admin approval.';
+        uploadForm.reset();
+      }).catch(error => {
+        uploadStatus.textContent = 'Error uploading: ' + error.message;
+      });
+    });
+  </script>
+</body>
+</html>

@@ -27,6 +27,8 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
   margin-bottom: 40px;
 }
 
@@ -37,6 +39,12 @@ header h1 {
 }
 
 /* Updated button styles for header nav */
+header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 header nav button {
   display: inline-block;
   padding: 10px 20px;
@@ -165,6 +173,8 @@ main .block {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 /* Buttons inside courses list items - updated style */
@@ -210,6 +220,7 @@ main .block {
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
   outline: none;
   font-weight: 500;
+  width: 100%;
 }
 
 .form input::placeholder,
@@ -264,6 +275,7 @@ main .block {
   box-shadow: inset 0 0 8px #323f5d;
   cursor: pointer;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
 }
 
 .dropdown:hover,
@@ -295,10 +307,46 @@ main .block {
     padding: 30px;
   }
 
-  button,
-  header nav button,
+  body {
+    padding: 20px;
+  }
+
   .form button {
     width: 100%;
     min-width: unset;
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+  }
+
+  .container {
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  header h1 {
+    font-size: 20px;
+  }
+
+  header nav button {
+    width: 100%;
+  }
+
+  .block h2 {
+    font-size: 16px;
+  }
+
+  #departmentsList {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
   }
 }

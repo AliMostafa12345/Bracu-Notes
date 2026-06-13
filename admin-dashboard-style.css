@@ -6,6 +6,7 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding: 20px;
   margin: 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -43,6 +44,7 @@ h1 {
   margin: 5px 0;
   line-height: 1.4;
   color: #c9d1d9;
+  word-break: break-word;
 }
 
 .note-card button {
@@ -79,4 +81,26 @@ button:hover {
   background-color: #f0b90b;
   color: #0d1117;
   box-shadow: 0 0 10px #f0b90b88;
+}
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .note-card {
+    padding: 15px;
+  }
+
+  .note-card button {
+    display: block;
+    width: 100%;
+    margin-right: 0;
+    margin-top: 8px;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 15px;
+  }
 }

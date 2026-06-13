@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <link rel="stylesheet" href="admin-dashboard-style.css">
-
 </head>
 <body>
   <h1>Admin Dashboard - Pending Notes</h1>
@@ -63,7 +64,6 @@
       noteRef.get().then(doc => {
         if (!doc.exists) return;
         const data = doc.data();
-        // Move note to approved 'resources'
         db.collection('resources').add({
           department: data.department,
           course: data.course,
@@ -71,7 +71,6 @@
           title: data.title,
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
-          // Delete from pending_notes
           noteRef.delete().then(loadNotes);
         });
       });

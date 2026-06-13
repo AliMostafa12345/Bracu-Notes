@@ -8,8 +8,10 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
   margin: 0;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 h1 {
@@ -27,6 +29,9 @@ form {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  max-width: 380px;
+  box-sizing: border-box;
 }
 
 input[type="email"],
@@ -37,9 +42,11 @@ input[type="password"] {
   padding: 12px 15px;
   margin-bottom: 15px;
   border-radius: 8px;
-  width: 260px;
+  width: 100%;
+  max-width: 300px;
   font-size: 1rem;
   transition: 0.3s;
+  box-sizing: border-box;
 }
 
 input:focus {
@@ -71,4 +78,19 @@ button:hover {
   font-size: 1rem;
   color: #f85149;
   text-align: center;
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  form {
+    padding: 24px 20px;
+  }
+
+  input[type="email"],
+  input[type="password"] {
+    max-width: 100%;
+  }
 }
